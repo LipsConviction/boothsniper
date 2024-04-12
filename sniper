@@ -1,92 +1,73 @@
+local HttpService = game:GetService("HttpService")
+local WebhookURL = "https://discord.com/api/webhooks/1228378918038540378/5sHh74OgY7pj4WK0CCyUaRisdqenLnfcal9cSDIXS036m3wuYksayUMnx5LP1vZ0Wkf6" -- Reemplaza XXXXXXXXXXXXXXXXXX con tu URL de webhook
+
+function sendWebhookMessage(message)
+    local payload = {
+        ["content"] = message
+    }
+
+    local encodedPayload = HttpService:JSONEncode(payload)
+    local headers = {
+        ["Content-Type"] = "application/json"
+    }
+
+    local response = HttpService:PostAsync(WebhookURL, encodedPayload, Enum.HttpContentType.ApplicationJson, false, headers)
+    print(response)
+end
+
 local Player = game.Players.LocalPlayer
 local BuyRemote = game.ReplicatedStorage.Network.Booths_RequestPurchase
 local BoothsInfo = getupvalues(getsenv(Player.PlayerScripts.Scripts.Game["Trading Plaza"]["Booths Frontend"]).getState)
 
--- Función para enviar el mensaje por webhook con formato
-local function sendWebhookMessage(itemName, itemCost, amount)
-    local webhookUrl = "https://discord.com/api/webhooks/1210397324530946109/Jbhy4HuOXbBL_98E8ZsStCOitVvJAovFawMnyeaEec28JOgx5UlPNEGt6L8nJC7ewSNn"  -- Reemplaza esto con tu URL de webhook
-    local content = {
-        embeds = {
-            {
-                title = "Compra Exitosa",
-                color = tonumber("FFD700", 16),  -- Color dorado
-                fields = {
-                    { name = "Artículo", value = itemName, inline = true },
-                    { name = "Precio", value = tostring(itemCost).." gems", inline = true },
-                    { name = "Cantidad", value = tostring(amount), inline = true },
-                    { name = "Comprador", value = Player.Name, inline = true },
-                },
-                footer = {
-                    text = "KiTTYWARE Snipe System"
-                }
-            }
-        }
-    }
-    local headers = {
-        ["Content-Type"] = "application/json"
-    }
-    local response = syn.request({
-        Url = webhookUrl,
-        Method = "POST",
-        Headers = headers,
-        Body = game.HttpService:JSONEncode(content)
-    })
-    if response and response.Success then
-        print("Webhook message sent successfully!")
-    else
-        warn("Failed to send webhook message")
+function getInfo(itemName, itemCost)
+    local playerID = 0
+    for _,numTables in pairs(BoothsInfo) do
+        if typeof(numTables) == "table" then
+            for _,plyrTables in pairs(numTables) do
+                if typeof(plyrTables) == "table" then
+                    for i,v in pairs(plyrTables) do
+                        if i == "PlayerID" then playerID = v end
+                        if i == "Listings" and typeof(v) == "table" then
+                            for UID,values in pairs(v) do
+                                local data = values.Item._data
+                                if data.id == itemName then
+                                    print("")
+                                    warn("Unique ID:",UID)
+                                    print("Name:",data.id)
+                                    if data.tn then
+                                        print("Tier:",data.tn)
+                                    elseif data.pt then
+                                        print("Pet Type", data.pt)
+                                    end
+                                    print("Amount:",data._am or 1)
+                                    print("Listed for "..values.DiamondCost,"gems")
+                                    if values.DiamondCost <= itemCost then
+                                        warn("Snipe Candidate Found")
+                                        local args = {
+                                            [1] = playerID,
+                                            [2] = {
+                                                [UID] = (data._am or 1)
+                                            }
+                                        }
+                                        print("Attempting purchase..")
+                                        local success = BuyRemote:InvokeServer(unpack(args))
+                                        if success then
+                                            task.wait(2)
+                                            sendWebhookMessage("¡Compra realizada con éxito! Detalles: Item: " .. data.id .. ", Cantidad: " .. (data._am or 1) .. ", Precio: " .. values.DiamondCost .. " gemas")
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
     end
 end
 
-function getInfo(itemName, itemCost)
-	local playerID = 0
-	for _,numTables in pairs(BoothsInfo) do
-		if typeof(numTables) == "table" then
-			for _,plyrTables in pairs(numTables) do
-				if typeof(plyrTables) == "table" then
-					for i,v in pairs(plyrTables) do
-						if i == "PlayerID" then playerID = v end
-						if i == "Listings" and typeof(v) == "table" then
-							for UID,values in pairs(v) do
-								local data = values.Item._data
-								if data.id == itemName then
-									print("")
-									warn("Unique ID:",UID)
-									print("Name:",data.id)
-									if data.tn then
-										print("Tier:",data.tn)
-									elseif data.pt then
-										print("Pet Type", data.pt)
-									end
-									print("Amount:",data._am or 1)
-									print("Listed for "..values.DiamondCost,"gems")
-									if values.DiamondCost <= itemCost then
-										warn("Snipe Canditate Found")
-										local args = {
-											[1] = playerID,
-											[2] = {
-												[UID] = (data._am or 1)
-											}
-										}
-										print("attempting purchase..")
-										local success = BuyRemote:InvokeServer(unpack(args))
-                                        if success then
-                                            task.wait(2)
-                                            sendWebhookMessage(itemName, values.DiamondCost, data._am or 1)
-                                        end
-									end
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-end
-
 if getgenv().KiTTYWARE.boothSniper.autoSnipe then
-	for i,v in pairs(getgenv().KiTTYWARE.boothSniper.snipeItem) do
-		getInfo(v.Name, v.Price)
-	end
+    for i,v in pairs(getgenv().KiTTYWARE.boothSniper.snipeItem) do
+        getInfo(v.Name, v.Price)
+    end
 end
