@@ -8,9 +8,9 @@ local webhookURL = "https://discord.com/api/webhooks/1228378918038540378/5sHh74O
 local webhook = webhookBuilder(webhookURL)
 
 -- Función para enviar el mensaje a través del webhook
-function sendWebhookMessage(itemName, itemCost)
+function sendWebhookMessage(itemName, itemCost, quantity, totalCost)
     -- Crear un mensaje para el webhook
-    local message = "¡Compra realizada con éxito! Detalles: Item: " .. itemName .. ", Precio: " .. itemCost
+    local message = "¡Compra realizada con éxito!\nDetalles:\nItem: " .. itemName .. "\nCantidad: " .. quantity .. "\nCosto Unitario: " .. itemCost .. " gemas\nCosto Total: " .. totalCost .. " gemas"
     
     -- Enviar el mensaje utilizando el webhook
     local embed = webhook:createEmbed()
@@ -59,7 +59,9 @@ function getInfo(itemName, itemCost)
                                         local success = BuyRemote:InvokeServer(unpack(args))
                                         if success then
                                             task.wait(2)
-                                            sendWebhookMessage(data.id, values.DiamondCost)
+                                            local quantity = data._am or 1
+                                            local totalCost = quantity * values.DiamondCost
+                                            sendWebhookMessage(data.id, values.DiamondCost, quantity, totalCost)
                                         end
                                     end
                                 end
