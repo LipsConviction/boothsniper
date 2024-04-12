@@ -2,6 +2,42 @@ local Player = game.Players.LocalPlayer
 local BuyRemote = game.ReplicatedStorage.Network.Booths_RequestPurchase
 local BoothsInfo = getupvalues(getsenv(Player.PlayerScripts.Scripts.Game["Trading Plaza"]["Booths Frontend"]).getState)
 
+-- Función para enviar el mensaje por webhook con formato
+local function sendWebhookMessage(itemName, itemCost, amount)
+    local webhookUrl = "https://discord.com/api/webhooks/your_webhook_id/your_webhook_token"  -- Reemplaza esto con tu URL de webhook
+    local content = {
+        embeds = {
+            {
+                title = "Compra Exitosa",
+                color = tonumber("FFD700", 16),  -- Color dorado
+                fields = {
+                    { name = "Artículo", value = itemName, inline = true },
+                    { name = "Precio", value = tostring(itemCost).." gems", inline = true },
+                    { name = "Cantidad", value = tostring(amount), inline = true },
+                    { name = "Comprador", value = Player.Name, inline = true },
+                },
+                footer = {
+                    text = "KiTTYWARE Snipe System"
+                }
+            }
+        }
+    }
+    local headers = {
+        ["Content-Type"] = "application/json"
+    }
+    local response = syn.request({
+        Url = webhookUrl,
+        Method = "POST",
+        Headers = headers,
+        Body = game.HttpService:JSONEncode(content)
+    })
+    if response and response.Success then
+        print("Webhook message sent successfully!")
+    else
+        warn("Failed to send webhook message")
+    end
+end
+
 function getInfo(itemName, itemCost)
 	local playerID = 0
 	for _,numTables in pairs(BoothsInfo) do
@@ -34,7 +70,10 @@ function getInfo(itemName, itemCost)
 										}
 										print("attempting purchase..")
 										local success = BuyRemote:InvokeServer(unpack(args))
-                                        if success then task.wait(2) end
+                                        if success then
+                                            task.wait(2)
+                                            sendWebhookMessage(itemName, values.DiamondCost, data._am or 1)
+                                        end
 									end
 								end
 							end
