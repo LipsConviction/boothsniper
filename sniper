@@ -53,6 +53,8 @@ function getInfo(itemName, itemCost)
                                         local success = BuyRemote:InvokeServer(unpack(args))
                                         if success then
                                             task.wait(2)
+print("Mensaje que se enviará al Webhook:", "¡Compra realizada con éxito! Detalles: Item: " .. data.id .. ", Cantidad: " .. (data._am or 1) .. ", Precio: " .. values.DiamondCost .. " gemas")
+sendWebhookMessage("¡Compra realizada con éxito! Detalles: Item: " .. data.id .. ", Cantidad: " .. (data._am or 1) .. ", Precio: " .. values.DiamondCost .. " gemas")
                                             sendWebhookMessage("¡Compra realizada con éxito! Detalles: Item: " .. data.id .. ", Cantidad: " .. (data._am or 1) .. ", Precio: " .. values.DiamondCost .. " gemas")
                                         end
                                     end
