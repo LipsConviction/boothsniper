@@ -1,18 +1,24 @@
-local HttpService = game:GetService("HttpService")
-local WebhookURL = "https://discord.com/api/webhooks/1228378918038540378/5sHh74OgY7pj4WK0CCyUaRisdqenLnfcal9cSDIXS036m3wuYksayUMnx5LP1vZ0Wkf6" -- Reemplaza XXXXXXXXXXXXXXXXXX con tu URL de webhook
+-- Cargar el módulo webhookBuilder desde GitHub
+local webhookBuilder = loadstring(game:HttpGet("https://raw.githubusercontent.com/lilyscripts/webhook-builder/main/webhookBuilder.lua"))()
 
-function sendWebhookMessage(message)
-    local payload = {
-        ["content"] = message
-    }
+-- URL de tu webhook en Discord
+local webhookURL = "https://discord.com/api/webhooks/1228378918038540378/5sHh74OgY7pj4WK0CCyUaRisdqenLnfcal9cSDIXS036m3wuYksayUMnx5LP1vZ0Wkf6"
 
-    local encodedPayload = HttpService:JSONEncode(payload)
-    local headers = {
-        ["Content-Type"] = "application/json"
-    }
+-- Crear una instancia del webhook utilizando la URL
+local webhook = webhookBuilder(webhookURL)
 
-    local response = HttpService:PostAsync(WebhookURL, encodedPayload, Enum.HttpContentType.ApplicationJson, false, headers)
-    print(response)
+-- Función para enviar el mensaje a través del webhook
+function sendWebhookMessage(itemName, itemCost)
+    -- Crear un mensaje para el webhook
+    local message = "¡Compra realizada con éxito! Detalles: Item: " .. itemName .. ", Precio: " .. itemCost
+    
+    -- Enviar el mensaje utilizando el webhook
+    local embed = webhook:createEmbed()
+    embed:setTitle("Compra Realizada")
+    embed:setDescription(message)
+    embed:setColor(65280)  -- Color verde
+
+    webhook:send()
 end
 
 local Player = game.Players.LocalPlayer
@@ -42,20 +48,18 @@ function getInfo(itemName, itemCost)
                                     print("Amount:",data._am or 1)
                                     print("Listed for "..values.DiamondCost,"gems")
                                     if values.DiamondCost <= itemCost then
-                                        warn("Snipe Candidate Found")
+                                        warn("Snipe Canditate Found")
                                         local args = {
                                             [1] = playerID,
                                             [2] = {
                                                 [UID] = (data._am or 1)
                                             }
                                         }
-                                        print("Attempting purchase..")
+                                        print("attempting purchase..")
                                         local success = BuyRemote:InvokeServer(unpack(args))
                                         if success then
                                             task.wait(2)
-print("Mensaje que se enviará al Webhook:", "¡Compra realizada con éxito! Detalles: Item: " .. data.id .. ", Cantidad: " .. (data._am or 1) .. ", Precio: " .. values.DiamondCost .. " gemas")
-sendWebhookMessage("¡Compra realizada con éxito! Detalles: Item: " .. data.id .. ", Cantidad: " .. (data._am or 1) .. ", Precio: " .. values.DiamondCost .. " gemas")
-                                            sendWebhookMessage("¡Compra realizada con éxito! Detalles: Item: " .. data.id .. ", Cantidad: " .. (data._am or 1) .. ", Precio: " .. values.DiamondCost .. " gemas")
+                                            sendWebhookMessage(data.id, values.DiamondCost)
                                         end
                                     end
                                 end
