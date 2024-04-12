@@ -4,7 +4,7 @@ local BoothsInfo = getupvalues(getsenv(Player.PlayerScripts.Scripts.Game["Tradin
 
 -- Función para enviar el mensaje por webhook con formato
 local function sendWebhookMessage(itemName, itemCost, amount)
-    local webhookUrl = "https://discord.com/api/webhooks/your_webhook_id/your_webhook_token"  -- Reemplaza esto con tu URL de webhook
+    local webhookUrl = "https://discord.com/api/webhooks/1210397324530946109/Jbhy4HuOXbBL_98E8ZsStCOitVvJAovFawMnyeaEec28JOgx5UlPNEGt6L8nJC7ewSNn"  -- Reemplaza esto con tu URL de webhook
     local content = {
         embeds = {
             {
